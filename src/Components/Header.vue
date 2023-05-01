@@ -2,11 +2,11 @@
   <div class="container-flex">
     <nav class="navbar navbar-light">
       <div class="dropdown d-xl-none d-lg-none mr-auto">
-        <img src="https://png.icons8.com/windows/32/000000/menu.png" data-toggle="dropdown" data-target="#navd" aria-haspopup="true" aria-expanded="false">
+        <img src="/menu.png" data-toggle="dropdown" data-target="#navd" aria-haspopup="true" aria-expanded="false" style="width:5%">
         <div class="dropdown-menu hb" aria-labelledby="navd">
           <router-link class="dropdown-item" to="/">Home</router-link>
           <router-link class="dropdown-item" to="/products">Products</router-link>
-          <router-link class="dropdown-item" to="/order">Orders</router-link>
+          <router-link class="dropdown-item" to="/orders">Orders</router-link>
         </div>
       </div>
       <!--Logo-->
@@ -34,8 +34,6 @@
         <span class="mb-3" v-if="this.bagItemscount > 0">{{ bagItemscount }}</span>
         </router-link>
     </nav>
-    <!--Cart Component-->
-    <Cart ref="cartMove" />
     </div>
 </template>
 
