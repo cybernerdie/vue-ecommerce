@@ -12,7 +12,6 @@ export default new Vuex.Store({
     products: [],
     orders: [],
     meta: '',
-    isLoading: false,
     user: null,
     token: null  
   },

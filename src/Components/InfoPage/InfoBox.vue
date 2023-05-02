@@ -59,7 +59,6 @@ export default {
       const response = await axios.post('/cart', {product_id: id, quantity: this.quan});
       this.$store.dispatch('fetchCartItems');
       this.$toast.success(response.data.message);
-         this.$router.push("/cart");
     } catch (error) {
       this.$toast.error(error.response.data.message);
       console.log(error);

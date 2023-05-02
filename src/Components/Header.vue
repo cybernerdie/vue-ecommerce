@@ -67,18 +67,22 @@ export default {
     async logout() {
         try {
           await axios.post('/auth/logout');
-          this.$store.commit('setUser', null);
-          this.$store.commit('setToken', null);
           this.$toast.success('Logout successful');
           this.$router.push("/login");
         } catch (error) {
           this.$toast.error(error.response.data.message);
+        } finally {
+          this.$store.commit('setUser', null);
+          this.$store.commit('setToken', null);
         }
     }
   },
 
   mounted() {
-    this.$store.dispatch('fetchCartItems')
+    const token = this.$store.state.token;
+    if (token) {
+      this.$store.dispatch('fetchCartItems')
+    }
   }
 }
 </script>

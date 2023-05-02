@@ -12,6 +12,6 @@ import Grid from '@/Components/ProductsPage/Grid.vue'
 export default {
   components: {
     Breadc, Grid
-  }
+  },
 }
 </script>

@@ -58,7 +58,7 @@ export default {
         password: this.password,
       };
       const endpoint = '/auth/login';
-      this.loginUser(data, endpoint);
+      this.authenticateUser(data, endpoint);
     },
 
     submitRegisterForm() {
@@ -68,10 +68,10 @@ export default {
         password: this.password,
       };
       const endpoint = '/auth/register';
-      this.loginUser(data, endpoint);
+      this.authenticateUser(data, endpoint);
     },
 
-    async loginUser(data, endpoint) {
+    async authenticateUser(data, endpoint) {
       try {
         const response = await axios.post(endpoint, data);
         const responseData = response.data.data;
