@@ -5,25 +5,30 @@
       <div v-if="isRegistering">
         <div class="form-group">
           <label for="name">Name</label>
-          <input type="text" id="name" v-model="name">
+          <input type="text" id="name" v-model="name" required>
+         <div v-if="errors.name" class="error">{{ errors.name[0] }}</div>
         </div>
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" v-model="email">
+          <input type="email" id="email" v-model="email" required>
+            <div v-if="errors.email" class="error">{{ errors.email[0] }}</div>
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" v-model="password">
+          <input type="password" id="password" v-model="password" required>
+          <div v-if="errors.password" class="error">{{ errors.password[0] }}</div>
         </div>
       </div>
       <div v-else>
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" v-model="email">
+          <input type="email" id="email" v-model="email" required>
+           <div v-if="errors.email" class="error">{{ errors.email[0] }}</div>
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" v-model="password">
+          <input type="password" id="password" v-model="password" required>
+            <div v-if="errors.password" class="error">{{ errors.password[0] }}</div>
         </div>
       </div>
       <button type="submit">{{ isRegistering ? 'Register' : 'Login' }}</button>
@@ -34,44 +39,77 @@
 </template>
 
 <script>
-export default {
-  name: 'AuthForm',
+import axios from "@/axios.js";
 
+export default {
   data() {
     return {
       isRegistering: false,
       name: '',
       email: '',
-      password: ''
-    }
+      password: '',
+      errors: [],
+    };
   },
   methods: {
-    submitForm() {
-      // Send the data to the server
-      const formData = {
+    submitLoginForm() {
+      const data = {
+        email: this.email,
+        password: this.password,
+      };
+      const endpoint = '/auth/login';
+      this.loginUser(data, endpoint);
+    },
+
+    submitRegisterForm() {
+      const data = {
         name: this.name,
         email: this.email,
-        password: this.password
-      }
-      console.log(formData)
-      // Reset the form
-      this.name = ''
-      this.email = ''
-      this.password = ''
+        password: this.password,
+      };
+      const endpoint = '/auth/register';
+      this.loginUser(data, endpoint);
     },
-    toggleIsRegistering() {
-      this.isRegistering = !this.isRegistering
-    }
-  }
-}
-</script>
 
+    async loginUser(data, endpoint) {
+      try {
+        const response = await axios.post(endpoint, data);
+        const responseData = response.data.data;
+        const user = responseData.user;
+        const token = responseData.token;
+
+        this.$store.commit('setUser', user);
+        this.$store.commit('setToken', token);
+        this.$toast.success(response.data.message);
+        this.$router.push('/');
+      } catch (error) {
+        this.$toast.error(error.response.data.message);
+        this.errors = error.response.data.errors;
+    }
+    },
+
+    submitForm() {
+      this.errors = [];
+
+      if (this.isRegistering) {
+        this.submitRegisterForm();
+      } else {
+        this.submitLoginForm();
+      }
+    },
+
+    toggleIsRegistering() {
+      this.isRegistering = !this.isRegistering;
+    },
+  },
+};
+</script>
 <style scoped>
 .auth-form-container {
   max-width: 400px;
   margin: 5% auto 0 auto;
   padding: 20px;
-  height: 100vh
+  min-height: 100vh
 }
 
 .auth-form {
@@ -136,5 +174,10 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+.error {
+  color: red;
+  margin-top: 1%;
 }
 </style>

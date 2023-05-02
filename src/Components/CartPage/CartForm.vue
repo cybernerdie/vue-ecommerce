@@ -1,17 +1,17 @@
 <template>
-  <div class="container my-5" style="height: 100vh">
+  <div class="container my-5 mb-4" style="min-height: 100vh">
     <h1>My Cart</h1>
     <div class="row" style="display: flex; justify-content: space-between;">
       <div class="col-md-7">
         <div v-if="cartItems.length">
           <div v-for="item in cartItems" class="row border-top py-3" :key="item.id">
             <div class="col-4">
-              <img :src="item.img" alt="product image" class="img-fluid">
+              <img :src="item.product.image_url" alt="product image" class="img-fluid">
             </div>
             <div class="col-8 d-flex flex-column justify-content-between">
               <div>
-                <h5>{{ item.title }}</h5>
-                <p class="mb-2">{{ item.price }}</p>
+                <h5>{{ item.product.name }}</h5>
+                <p class="mb-2">${{ item.product.price }}</p>
                 <div class="d-flex justify-content-start align-items-center">
                   <button class="btn btn-link btn-sm p-0 mr-2" @click="removeItem(item)">Remove</button>
                   <button class="btn btn-link btn-sm p-0" @click="updateItem(item)">Update</button>
@@ -36,19 +36,15 @@
         <h5 class="mb-3">Order Summary</h5>
         <div class="d-flex justify-content-between align-items-center border-top py-2">
           <span>Subtotal:</span>
-          <span>${{ subtotal }}</span>
+          <span>${{ orderTotal }}</span>
         </div>
         <div class="d-flex justify-content-between align-items-center border-top py-2">
           <span>Shipping:</span>
           <span>$0.00</span>
         </div>
         <div class="d-flex justify-content-between align-items-center border-top py-2">
-          <span>Tax:</span>
-          <span>${{ tax }}</span>
-        </div>
-        <div class="d-flex justify-content-between align-items-center border-top py-2">
           <span>Total:</span>
-          <span>${{ total }}</span>
+          <span>${{ orderTotal }}</span>
         </div>
         <button class="btn btn-primary btn-block mt-3" @click="checkout">Checkout</button>
       </div>
@@ -57,28 +53,55 @@
 </template>
 
 <script>
-export default {
-    name: 'CartForm',
+import axios from "@/axios.js";
 
-  data() {
-    return {
-      cartItems: [
-        {
-          id: 1,
-          title: 'Product 1',
-          price: 19.99,
-          img: 'https://via.placeholder.com/150x150',
-          quantity: 1
-        },
-        {
-          id: 2,
-          title: 'Product 2',
-          price: 29.99,
-          img: 'https://via.placeholder.com/150x150',
-          quantity: 2
+export default {
+  name: 'CartForm',
+
+  created(){
+    this.$store.dispatch('fetchCartItems')
+  },
+
+  computed: {
+    cartItems(){
+     return this.$store.state.cartItems
+    },
+
+    orderTotal(){
+      return this.$store.getters.totalPrice
+    },
+  },
+
+  methods: {
+      async handleApiRequest(method, url, data = null) {
+        try {
+          const response = await axios({ method, url, data });
+          this.$store.dispatch('fetchCartItems');
+          this.$toast.success(response.data.message);
+        } catch (error) {
+          this.$toast.error(error.response.data.message);
+          console.log(error);
         }
-      ]
-    }
+    },
+
+    async removeItem(item) {
+      await this.handleApiRequest('DELETE', `/cart/${item.id}`);
+    },
+
+    async updateItem(item) {
+      await this.handleApiRequest('PUT', `/cart/${item.id}`, { quantity: item.quantity });
+    },
+
+    async clearCart() {
+      await this.handleApiRequest('DELETE', '/cart');
+      this.cartItems = [];
+    },
+
+    async checkout() {
+      await this.handleApiRequest('POST', '/checkout');
+      this.$store.dispatch('fetchOrders')
+      this.$router.push('/orders');
+    },
   }
 }
 </script>

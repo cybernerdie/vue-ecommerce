@@ -3,13 +3,13 @@
     <transition-group name="fade" class="row" tag="div">
       <div v-for="item in CardArray" class="col-6 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-xs-4 pb-3" :key="item.id">
     <div class="card">
-      <img class="card-img-top" :src="item.img" alt="Card image cap">
+      <img class="card-img-top" :src="item.image_url" alt="Card image cap">
       <div class="overlay">
-        <button type="button" class="btn btn-outline-secondary btn-lg" @click="addtoCart(item)">Add +</button>
+        <button type="button" class="btn btn-outline-secondary btn-lg" @click="addtoCart(item, item.id)">Add +</button>
         <router-link to="/Info"><button type="button" class="btn btn-outline-secondary btn-lg" @click="sendInfo(item)">Info</button></router-link>
       </div>
       <div class="card-body">
-        <h5 class="card-title">{{ item.title }}</h5>
+        <h5 class="card-title">{{ item.name }}</h5>
         <p class="card-text">${{ item.price }}</p>
       </div>
     </div>
@@ -21,13 +21,39 @@
 </template>
 
 <script>
+import axios from "@/axios.js";
+
 export default {
   props: ['CardArray'],
   name: 'Card',
+
+  data() {
+    return {
+      quan: 1,
+    }
+  },
+
   methods: {
-    addtoCart(it) {
-     this.$store.commit('inCart', it)
+    async addtoCart(it, id) {
+      // check if user is authenticated
+      const isAuthenticated = this.$store.getters.isAuthenticated;
+      if (!isAuthenticated) {
+        // show error message and redirect to login page
+        this.$toast.info("Please log in to add items to your cart.");
+        this.$router.push("/login");
+        return;
+      }
+
+      try {
+        const response = await axios.post('/cart', {product_id: id, quantity: this.quan});
+        this.$store.dispatch('fetchCartItems');
+        this.$toast.success(response.data.message);
+      } catch (error) {
+        this.$toast.error(error.response.data.message);
+        console.log(error);
+      }
     },
+
     sendInfo(it) {
      this.$store.commit('addtoInfo', it)
     }

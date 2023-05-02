@@ -2,7 +2,7 @@
   <footer class="footer_area">
         <div style="text-align: center; padding: 30px">
           <div class="tiny-footer">
-            <p>Copyright © VME Coop All Rights Reserved 2023</p>
+            <p>Copyright © VueCommerce All Rights Reserved 2023</p>
         </div>
     </div>
   </footer>

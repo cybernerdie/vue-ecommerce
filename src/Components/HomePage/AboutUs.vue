@@ -19,6 +19,6 @@ export default {
   padding: 2rem 1rem;
   margin-bottom: 0;
   border-radius: 0;
-  height: 100vh;
+  min-height: 100vh;
 }
 </style>

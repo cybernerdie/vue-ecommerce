@@ -6,8 +6,7 @@
           <router-link to="/">Home</router-link>
         </li>
         <li class="breadcrumb-item"><router-link to="/products">Products</router-link></li>
-        <li class="breadcrumb-item">{{ it.type }}</li>
-        <li class="breadcrumb-item active">{{ it.title }}</li>
+        <li class="breadcrumb-item active">{{ it.name }}</li>
       </ol>
     </nav>
   </div>

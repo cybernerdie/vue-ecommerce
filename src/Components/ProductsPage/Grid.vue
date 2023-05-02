@@ -1,28 +1,43 @@
 <template>
-  <div class="container grid">
-    <div class="row">
+  <div class="container grid">   
+    <div class="row"> 
       <div class="row col-6 pb-4 pr-1">
         <div class="dropdown">
-          <a class="btn btn-light dropdown-toggle" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">SORT BY
-            <span style="color:#f2be00;">{{ sortButton }}</span>
-          </a>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-            <a class="dropdown-item" @click="sortDate">Date</a>
-            <a class="dropdown-item" @click="sortPrice" >Price</a>
-            <a class="dropdown-item" @click="sortTrend">Name</a>
+          <button class="btn dropdown-toggle" type="button" id="sortDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Sort by
+          </button>
+          <div class="dropdown-menu" aria-labelledby="sortDropdown">
+            <h6 class="dropdown-header">Sort by Date:</h6>
+            <a class="dropdown-item" @click="sortProducts('date', 'desc')">Latest</a>
+            <a class="dropdown-item" @click="sortProducts('date', 'asc')">Oldest</a>
+            <div class="dropdown-divider"></div>
+            <h6 class="dropdown-header">Sort by Price:</h6>
+            <a class="dropdown-item" @click="sortProducts('price', 'asc')">Low to High</a>
+            <a class="dropdown-item" @click="sortProducts('price', 'desc')">High to Low</a>
+            <div class="dropdown-divider"></div>
+            <h6 class="dropdown-header">Sort by Name:</h6>
+            <a class="dropdown-item" @click="sortProducts('name', 'asc')">A to Z</a>
+            <a class="dropdown-item" @click="sortProducts('name', 'desc')">Z to A</a>
           </div>
         </div>
+
       </div>
+           <div class="searc d-none d-xl-block d-lg-block pr-3">
+            <form @submit.prevent="searchProducts" @keyup.enter="searchProducts">
+            <input type="search" class="search" v-model="searchTerm">
+            <button type="submit" class="btn-search">Search</button>
+          </form>
+            </div>
       <div class="row justify-content-center">
         <div class="row col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
-          <div v-if="this.cards == 0" class="col-12 col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12">
+          <div v-if="this.products == 0" class="col-12 col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <h4 style="margin-left:9rem;margin-right:9rem">Sorry, we can't find a product with this features</h4>
           </div>
 
             <Card :CardArray="slicedCards" />
 
           <div class="col-12 col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12 py-5">
-            <button type="button" @click="incCardNumber" class="btn btn-outline-secondary btn-lg btn-block">More +</button>
+            <button v-if="this.metaData.current_page < metaData.last_page" type="button" @click="loadMore" class="btn btn-outline-secondary btn-lg btn-block">More +</button>
           </div>
         </div>
       </div>
@@ -33,56 +48,107 @@
 <script>
 import slider from './slider.vue'
 import Card from './Card.vue'
+import axios from "@/axios.js";
 
 export default {
   name:'Grid',
+
   components: {
     slider, Card
   },
+
   data() {
     return {
-      cards: [],
+      products: [],
+      metaData: [],
       showCards: 6,
-      sortButton: 'DEFAULT'
+      sortButton: 'DEFAULT',
+      isLoading: false,
+      searchTerm: ''
     }
   },
-  created(){
-    this.cards = this.it
+
+  created() {
+    this.$store.dispatch('fetchProducts')
+    this.products = this.getProducts
+    this.showCards = this.setShowCards
+    this.metaData = this.setMetaData
   },
+
+  watch: {
+      searchTerm(newValue, oldValue) {
+        if (newValue === '') {
+           this.$store.dispatch('fetchProducts').then(() => {
+              this.products = this.getProducts;
+              this.showCards = this.setShowCards
+              this.metaData = this.setMetaData
+      });
+        }
+      }
+  },
+
   computed: {
-    it(){
-    return this.$store.state.items
+    getProducts(){
+    return this.$store.state.products
     },
+
+    setShowCards(){
+    return this.$store.state.meta.per_page
+    },
+
+    setMetaData(){
+    return this.$store.state.meta
+    },
+
     slicedCards(){
-      return this.cards.slice(0, this.showCards)
+      return this.products.slice(0, this.showCards)
     }
   },
   methods: {
-    incCardNumber() {
-      return this.showCards += 6
+
+    loadMore() {
+      this.getMoreProducts()
     },
-    valueSlider(value) {
-      var x = value[0];
-      var y = value[1];
-      this.cards = this.it.filter((e)=> x < e.price && e.price < y)
+
+    async getMoreProducts() {
+      if (this.metaData.current_page < this.metaData.last_page) {
+        const nextPage = this.metaData.current_page + 1;
+         try {
+          const response = await axios.get(`/products?page=${nextPage}`);
+            this.processResponseData(response.data)
+        } catch (error) {
+          console.error(error);
+        } 
+      }
     },
-    sortDate() {
-       this.cards.sort((a, b) => (a.title.length * 2)-(b.title.length * 4))
-       return this.sortButton = 'DATE'
+
+    async searchProducts() {
+      if (!this.searchTerm) {
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/products?search_item=${this.searchTerm}`)
+          this.processResponseData(response.data)
+        } catch (error) {
+          this.$toast.error(error.response.data.message);
+        }
     },
-    sortPrice() {
-       this.cards.sort((a, b) => a.price-b.price)
-       return this.sortButton = 'PRICE'
+
+    async sortProducts(sortBy, sortOrder) {
+       try {
+          const response = await axios.get(`/products?sort_by=${sortBy}&sort_order=${sortOrder}`);
+          this.processResponseData(response.data)
+        } catch (error) {
+          this.$toast.error(error.response.data.message);
+        }
     },
-    sortTrend() {
-       this.cards.sort((a, b) => a.type.length-b.type.length)
-       return this.sortButton = 'TRENDING'
-    },
-    sortI(name){
-      this.cards = this.it.filter((e) => e.type.match(name) || e.color.match(name))
-    },
-    reSet() {
-      return this.cards = this.it
+
+    processResponseData(data) {
+      this.$store.commit('setProductData', data);
+      this.products = this.getProducts
+      this.showCards = this.setShowCards
+      this.metaData = this.setMetaData
     }
   }
   }
@@ -116,8 +182,6 @@ export default {
 .btn-outline-secondary {
   border-radius: 0 !important;
 }
-
-/*search options*/
 
 .card-selector {
   color: #DCDCDC;

@@ -6,7 +6,7 @@
         <div class="dropdown-menu hb" aria-labelledby="navd">
           <router-link class="dropdown-item" to="/">Home</router-link>
           <router-link class="dropdown-item" to="/products">Products</router-link>
-          <router-link class="dropdown-item" to="/orders">Orders</router-link>
+          <router-link v-if="user" class="dropdown-item" to="/orders">Orders</router-link>
         </div>
       </div>
       <!--Logo-->
@@ -17,19 +17,24 @@
       <span class="navbar-item bc d-none d-xl-block d-lg-block py-0">
         <router-link class="pl-5" to="/">Home</router-link>
         <router-link class="px-5" to="/products">Products</router-link>
-        <router-link to="/orders">Orders</router-link>
+        <router-link v-if="user" to="/orders">Orders</router-link>
       </span>
 
-      <p class="navbar-item ml-auto">
-        <div class="searc d-none d-xl-block d-lg-block pr-3">
-          <input type="search" class="search">
-        </div>
-       <router-link to="/login">
+      <p class="navbar-item ml-auto"></p>
+
+      <router-link v-if="user" to="/">
+      <div class="user" @click="logout">
+        <h5>Logout</h5>
+      </div>
+    </router-link>
+
+      <router-link v-else to="/login">
         <div class="user">
           <h5>Sign In</h5>
         </div>
       </router-link>
-        <router-link to="/cart" class="bag">
+
+        <router-link v-if="user" to="/cart" class="bag">
         <img class="pb-1" src="@/assets/cart.svg">
         <span class="mb-3" v-if="this.bagItemscount > 0">{{ bagItemscount }}</span>
         </router-link>
@@ -39,18 +44,41 @@
 
 <script>
 
+import axios from "@/axios.js";
+
 export default {
   name: 'Header',
 
   computed: {
     bagItemscount() {
       return this.$store.getters.itemsNumber
-    }
+    },
+
+    user() {  
+      return this.$store.state.user !== null;
+    },
   },
+
   methods: {
     openCart() {
       this.$refs.cartMove.cartON()
+    },
+
+    async logout() {
+        try {
+          await axios.post('/auth/logout');
+          this.$store.commit('setUser', null);
+          this.$store.commit('setToken', null);
+          this.$toast.success('Logout successful');
+          this.$router.push("/login");
+        } catch (error) {
+          this.$toast.error(error.response.data.message);
+        }
     }
+  },
+
+  mounted() {
+    this.$store.dispatch('fetchCartItems')
   }
 }
 </script>
@@ -89,7 +117,7 @@ nav {
   border: 1px #F8F8F8;
   background: #ededed url('../assets/search.png') no-repeat 5px center;
   padding: 5px 8px 0px 26px;
-  width: 10px;
+  width: 500px;
   -webkit-border-radius: 10em;
   -moz-border-radius: 10em;
   border-radius: 10em;
@@ -97,30 +125,6 @@ nav {
   -moz-transition: all .5s;
   transition: all .5s;
   margin-right: 10px;
-}
-
-.search:hover {
-  width: 500px;
-  border: solid 1px #ccc;
-  background-color: #fff;
-  border-color: #98ccfd;
-  -webkit-box-shadow: 0 0 5px rgba(109, 207, 246, .5);
-  -moz-box-shadow: 0 0 5px rgba(109, 207, 246, .5);
-  box-shadow: 0 0 5px rgba(109, 207, 246, .5);
-  backface-visibility: hidden;
-  perspective: 1000;
-}
-
-.search:focus {
-  width: 500px;
-  border: solid 1px #ccc;
-  background-color: #fff;
-  border-color: #98ccfd;
-  -webkit-box-shadow: 0 0 5px rgba(109, 207, 246, .5);
-  -moz-box-shadow: 0 0 5px rgba(109, 207, 246, .5);
-  box-shadow: 0 0 5px rgba(109, 207, 246, .5);
-  backface-visibility: hidden;
-  perspective: 1000;
 }
 
 form .btn-xl.btn-success.mt-3 {
@@ -163,6 +167,20 @@ form .btn-xl.btn-success.mt-3 {
 
 .user:hover {
   text-decoration: underline;
+}
+
+.btn-search {
+  background-color: #007bff;
+  border: none;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-search:hover {
+  background-color: #0069d9;
 }
 
 </style>
