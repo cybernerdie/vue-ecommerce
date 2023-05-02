@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from 'axios';
 import store from './store';
 
 const instance = axios.create({
@@ -7,6 +7,17 @@ const instance = axios.create({
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${store.state.token}`
   }
-})
+});
 
-export default instance
+// Add a request interceptor
+instance.interceptors.request.use(
+  function (config) {
+    config.headers.Authorization = `Bearer ${store.state.token}`;
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
+
+export default instance;
